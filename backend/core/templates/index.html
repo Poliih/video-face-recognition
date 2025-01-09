@@ -1,0 +1,37 @@
+<!-- upload_video.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload de Vídeo</title>
+</head>
+<body>
+    <h1>Upload de Vídeo</h1>
+    <form method="POST" enctype="multipart/form-data" action="{% url 'upload_video' %}">
+        {% csrf_token %}
+        <input type="file" name="video" accept="video/*">
+        <button type="submit">Enviar Vídeo</button>
+    </form>
+
+    {% if video %}
+        <h2>Vídeo Carregado:</h2>
+        <video width="320" height="240" controls>
+            <source src="{{ video.file.url }}" type="video/mp4">
+            Seu navegador não suporta o elemento de vídeo.
+        </video>
+    {% endif %}
+
+    {% if faces %}
+        <h2>Faces Detectadas:</h2>
+        <ul>
+            {% for face in faces %}
+                <li>
+                    <img src="{{ face.image.url }}" alt="Face detectada" />
+                    <p>Coordenadas: {{ face.coordinates }}</p>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</body>
+</html>
