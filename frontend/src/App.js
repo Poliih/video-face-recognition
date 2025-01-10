@@ -1,25 +1,24 @@
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Menu from "./components/Menu/Menu";
+import Upload_pag from "./pages/Upload_pag/Upload_pag";
+import Manual from "./pages/Manual/Manual";
+import Automatic from "./pages/Automatic/Automatic";
+import Profiles from "./pages/Profiles/Profiles";
 
-function App() {
+
+const App = () => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <Menu />
+      <Routes>
+        <Route path="/Upload_pag" element={<Upload_pag />} />
+        <Route path="/agrupamento/manual" element={<Manual />} />
+        <Route path="/agrupamento/automatico" element={<Automatic />} />
+        <Route path="/profiles" element={<Profiles />} />
+      </Routes>
+    </Router>
   );
-}
+};
 
 export default App;

@@ -5,6 +5,8 @@ import time
 import dlib
 from celery import shared_task
 from django.conf import settings
+from video.models import Face, Video
+from user_profile.associate_faces import associate_faces_to_profiles
 
 def create_face_folder():
     face_image_dir = os.path.join(settings.MEDIA_ROOT, "face")
@@ -18,6 +20,7 @@ def create_face_folder():
 @shared_task
 def process_video(video_id):
     try:
+        video_instance = Video.objects.get(id=video_id)
         video_path = f"videos/{video_id}.mp4"  
         video_full_path = os.path.join(settings.MEDIA_ROOT, video_path)
 
@@ -56,10 +59,8 @@ def process_video(video_id):
         detector = dlib.get_frontal_face_detector()
         predictor = dlib.shape_predictor(predictor_path)  
 
-
         last_positions = {}
 
-       
         last_saved_time = {}
 
         while True:
@@ -100,13 +101,22 @@ def process_video(video_id):
 
                 for face_location in faces_to_save:
                     top, right, bottom, left = face_location
-                    face_image_path = os.path.join(face_image_dir, f"face_{frame_count // int(fps)}_{top}_{left}_{int(time.time())}.jpg")
+                    face_image_filename = f"{video_instance.id}_{frame_count}.jpg"  
+                    face_image_path = os.path.join(face_image_dir, face_image_filename)
                     print(f"Tentando salvar a face: {face_image_path}")
 
                     if cv2.imwrite(face_image_path, frame[top:bottom, left:right]):
                         print(f"Face salva com sucesso: {face_image_path}")
                     else:
                         print(f"Falha ao salvar a face: {face_image_path}")
+
+                   
+                    face_instance = Face.objects.create(
+                        video=video_instance,  
+                        image=face_image_path, 
+                        coordinates=f"{top},{left},{bottom},{right}",  
+                    )
+                    print(f"Face salva no banco de dados com sucesso: {face_instance}")
 
                     last_positions[face_key] = (top, left, bottom, right)
 
@@ -124,11 +134,11 @@ def process_video(video_id):
                         tracked_position = tracker.get_position()
                         top, left, bottom, right = int(tracked_position.top()), int(tracked_position.left()), int(tracked_position.bottom()), int(tracked_position.right())
 
-
                         timestamp = int(time.time())
                         if face_key not in last_saved_time or last_saved_time.get(face_key) != timestamp:
 
-                            face_image_path = os.path.join(face_image_dir, f"face_rastreada_{timestamp}_{top}_{left}.jpg")
+                            face_image_filename = f"{video_id}_{frame_count}.jpg"  
+                            face_image_path = os.path.join(face_image_dir, face_image_filename)
                             print(f"Tentando salvar a face rastreada: {face_image_path}")
 
                             if cv2.imwrite(face_image_path, frame[top:bottom, left:right]):
@@ -136,6 +146,12 @@ def process_video(video_id):
                             else:
                                 print(f"Falha ao salvar a face rastreada: {face_image_path}")
 
+                            face_instance = Face.objects.create(
+                                video=video_instance,
+                                image=face_image_path,
+                                coordinates=f"{top},{left},{bottom},{right}",  
+                            )
+                            print(f"Face rastreada salva no banco de dados com sucesso: {face_instance}")
                             last_saved_time[face_key] = timestamp
 
         video_capture.release()
@@ -145,3 +161,19 @@ def process_video(video_id):
     except Exception as e:
         print(f"Erro inesperado: {e}")
         return f"Erro ao processar o vídeo: {e}"
+    
+@shared_task
+def process_and_group_faces(video_id):
+    try:
+        video_instance = Video.objects.get(id=video_id)
+
+        result = process_video(video_id)  
+        print(result) 
+        
+        associate_faces_to_profiles()
+
+        return "Vídeo processado e faces agrupadas com sucesso!"
+    
+    except Exception as e:
+        print(f"Erro ao processar o vídeo ou associar faces: {e}")
+        return f"Erro: {e}"

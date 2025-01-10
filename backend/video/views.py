@@ -6,6 +6,7 @@ from user_profile.tasks import process_video
 from django.http import JsonResponse
 import os
 from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 
 class VideoViewSet(viewsets.ModelViewSet):
     queryset = Video.objects.all()
@@ -15,10 +16,11 @@ class FaceViewSet(viewsets.ModelViewSet):
     queryset = Face.objects.all()
     serializer_class = FaceSerializer
 
+@csrf_exempt
 def upload_video(request):
     if request.method == "POST":
         if 'video' not in request.FILES:
-            return JsonResponse({"error": "Arquivo de vídeo não encontrado"}, status=400)
+            return JsonResponse({"error": "Vídeo não encontrado"}, status=400)
 
         video_file = request.FILES['video']
         video = Video.objects.create(file=video_file)
@@ -29,23 +31,23 @@ def upload_video(request):
         new_file_path = os.path.join(settings.MEDIA_ROOT, 'videos', new_filename)
 
         if not os.path.exists(os.path.dirname(new_file_path)):
-            os.makedirs(os.path.dirname(new_file_path))  
+            os.makedirs(os.path.dirname(new_file_path))
 
         try:
             os.rename(video.file.path, new_file_path)
             video.file.name = os.path.join('videos', new_filename)
             video.save()
-            print(f"Arquivo salvo em: {new_file_path}")  
+            print(f"Arquivo salvo em: {new_file_path}")
         except Exception as e:
-            return JsonResponse({"error": f"Erro ao salvar arquivo: {str(e)}"}, status=500)
+            return JsonResponse({"error": "Erro ao salvar vídeo"}, status=500)
 
         process_video.apply_async(args=[video.id], countdown=5)
 
-        return JsonResponse({"status": "Vídeo em processamento", "video_id": video.id}, status=200)
+        return JsonResponse({"status": "Processando vídeo", "video_id": video.id}, status=200)
     
-    return JsonResponse({"error": "Método HTTP não permitido. Use POST."}, status=405)
+    return JsonResponse({"error": "Método inválido. Use POST."}, status=405)
 
-
+@csrf_exempt
 def get_faces(request, video_id):
     try:
         video = Video.objects.get(id=video_id)
