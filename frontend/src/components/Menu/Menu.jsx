@@ -1,26 +1,33 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; 
+import React, { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import "./Menu.css";
 
 const Menu = () => {
-  const [selected, setSelected] = useState("upload_pag"); 
-  const [openSubmenu, setOpenSubmenu] = useState(false); 
-  const navigate = useNavigate(); 
+  const [selected, setSelected] = useState("upload_pag");
+  const [openSubmenu, setOpenSubmenu] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  useEffect(() => {
-    navigate("/upload_pag"); 
-  }, [navigate]);
+  React.useEffect(() => {
+    const pathToItem = {
+      "/upload_pag": "upload_pag",
+      "/agrupamento/manual": "manual",
+      "/agrupamento/automatico": "automatic",
+      "/profiles": "profiles",
+    };
+    setSelected(pathToItem[location.pathname] || "upload_pag");
+  }, [location.pathname]);
 
   const handleSelect = (item, path) => {
     setSelected(item);
     if (item === "agrupamento") {
-      setOpenSubmenu(!openSubmenu); 
+      setOpenSubmenu(!openSubmenu);
     } else {
-      setOpenSubmenu(false); 
+      setOpenSubmenu(false);
     }
 
     if (path) {
-      navigate(path); 
+      navigate(path);
     }
   };
 
