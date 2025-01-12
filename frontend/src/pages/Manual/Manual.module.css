@@ -10,6 +10,13 @@ body {
   overflow: hidden; 
 }
 
+.face-item[draggable="true"] {
+  cursor: move;
+}
+
+.face-item.dragging {
+  opacity: 0.5;
+}
 .automatic-grouping {
   margin-top: 100px;
   gap: 30px;
@@ -33,7 +40,6 @@ body {
   width: 45%;
   background-color: rgba(16, 125, 132, 0.2);
   border-radius: 20px;
-  grid-template-columns: repeat(4, 1fr);
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -114,12 +120,26 @@ body {
 
 .profile-rect {
   position: relative;
-  background-color: rgba(16, 125, 132, 0.2); 
+  background-color: rgba(16, 125, 132, 0.2);
   border-radius: 20px;
   padding: 20px;
   margin-bottom: 20px;
-  max-height: 300px; 
-  overflow-y: auto; 
+  max-height: 300px;
+  overflow-y: auto;
+  transition: background-color 0.3s ease;
+}
+profile-rect:hover {
+  background-color: rgba(16, 125, 132, 0.3); 
+  cursor: pointer;
+}
+
+.profile-rect.drag-over {
+  background-color: rgba(16, 125, 132, 0.4); 
+}
+
+
+.face-item.dragging {
+  opacity: 0.5;
 }
 
 .profile-background {
@@ -181,8 +201,6 @@ body {
   border-radius: 20px;
   z-index: 9999;  
 }
-
-
 
 @media (min-width: 1920px) {
   

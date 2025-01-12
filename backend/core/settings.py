@@ -26,6 +26,8 @@ INSTALLED_APPS = [
     'user_profile',
     'corsheaders', 
     'rest_framework',
+    'django_extensions',
+    'rest_framework.authtoken',
     'core',
 ]
 
@@ -64,7 +66,7 @@ WSGI_APPLICATION = 'core.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'computer_vision',
+        'NAME': 'computer_vision3',
         'USER': 'root',
         'PASSWORD': 'Senhamysql',
         'HOST': 'localhost',
@@ -95,10 +97,14 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = 'static/'
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+STATIC_URL = '/static/'
+
+
+MEDIA_URL = '/media/'  
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  
+
+
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -128,3 +134,4 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
 }
+

@@ -153,6 +153,12 @@ def process_video(video_id):
                             )
                             print(f"Face rastreada salva no banco de dados com sucesso: {face_instance}")
                             last_saved_time[face_key] = timestamp
+                            if cv2.imwrite(face_image_path, frame[top:bottom, left:right]):
+                                print(f"Face salva com sucesso: {face_image_path}")
+                            else:
+                                print(f"Falha ao salvar a face: {face_image_path}")
+                                print(f"Verifique o diretório: {face_image_dir} e permissões de escrita.")
+
 
         video_capture.release()
         print(f"Processamento do vídeo concluído com sucesso!")

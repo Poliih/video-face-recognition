@@ -9,6 +9,12 @@ from user_profile.tasks import process_video
 from video.models import Video
 from user_profile.utils import calculate_similarity
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
+from django.shortcuts import get_object_or_404
+from rest_framework.permissions import IsAuthenticated,AllowAny
+from rest_framework.permissions import AllowAny
+import logging
+from rest_framework.decorators import api_view, permission_classes
+
 
 class ProfileViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.all()
@@ -32,19 +38,45 @@ def process_video_view(request, video_id):
         return JsonResponse({'error': 'Vídeo não encontrado!'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-
+    
+logger = logging.getLogger(__name__)
 @csrf_exempt
 @api_view(['POST'])
-def associate_faces(request, profile_id):
-    profile = Profile.objects.get(id=profile_id)
-    face_ids = request.data.get('face_ids', [])
-    
-    for face_id in face_ids:
-        face = Face.objects.get(id=face_id)
-        face.profiles.add(profile)
-        face.save()
+@permission_classes([AllowAny])
+def associate_faces_to_profile(request):
+    try:
+        logger.info("Requisição recebida: %s", request.data)
 
-    return Response({"message": "Faces associadas com sucesso!"})
+        profile_id = request.data.get('profile_id')
+        face_ids = request.data.get('face_ids', [])
+
+        if not profile_id or not face_ids:
+            return Response({"error": "profile_id e face_ids são obrigatórios."}, status=400)
+
+        logger.info("profile_id: %s, face_ids: %s", profile_id, face_ids)
+
+        try:
+            profile = Profile.objects.get(id=profile_id)
+        except Profile.DoesNotExist:
+            return Response({"error": "Perfil não encontrado."}, status=404)
+
+        faces = Face.objects.filter(id__in=face_ids)
+
+        logger.info("Faces encontradas: %s", faces)
+
+        if len(faces) != len(face_ids):
+            missing_ids = set(face_ids) - set(faces.values_list('id', flat=True))
+            return Response({"error": f"As seguintes faces não foram encontradas: {list(missing_ids)}"}, status=404)
+
+        for face in faces:
+            FaceProfile.objects.update_or_create(profile=profile, face=face)
+
+        return Response({"message": "Faces associadas com sucesso ao perfil!"})
+
+    except Exception as e:
+        logger.error("Erro: %s", str(e))
+        return Response({"error": str(e)}, status=500)
+
 
 @csrf_exempt
 @api_view(['POST'])
@@ -56,8 +88,11 @@ def generate_suggestions(request):
 
     return Response({"similar_faces": similar_faces})
 
-@csrf_exempt
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+
 @api_view(['POST'])
+@permission_classes([AllowAny])   
 def create_profile(request):
     if request.method == 'POST':
         serializer = ProfileSerializer(data=request.data)
@@ -65,3 +100,80 @@ def create_profile(request):
             profile = serializer.save()
             return Response({'status': 'Perfil criado com sucesso', 'profile_id': profile.id})
         return Response(serializer.errors, status=400)
+
+@csrf_exempt
+@api_view(['GET'])
+@permission_classes([AllowAny]) 
+def list_profiles_with_faces(request):
+
+    try:
+        profiles = Profile.objects.prefetch_related('profile_faces__face').all()
+
+        data = [
+            {
+                "id": profile.id,
+                "name": profile.name,
+                "faces": FaceSerializer(profile.profile_faces.all(), many=True).data
+            }
+            for profile in profiles
+        ]
+        return Response(data)
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def list_faces_sem_perfil(request):
+    try:
+
+        faces_sem_perfil = Face.objects.filter(profile__isnull=True)
+        serializer = FaceSerializer(faces_sem_perfil, many=True)
+        return Response({"faces_sem_perfil": serializer.data}, status=200)
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+@api_view(['PUT'])
+@permission_classes([AllowAny]) 
+def update_profile(request, profile_id):
+
+    try:
+        profile = get_object_or_404(Profile, id=profile_id)
+        profile.name = request.data.get('name', profile.name)
+
+        face_ids = request.data.get('face_ids', [])
+        if face_ids:
+            faces = Face.objects.filter(id__in=face_ids)
+            profile.profile_faces.clear()  
+            for face in faces:
+                FaceProfile.objects.create(profile=profile, face=face)
+
+        profile.save()
+        return Response({'status': 'Perfil atualizado com sucesso'})
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+@api_view(['DELETE'])
+@permission_classes([AllowAny])  
+def delete_profile(request, profile_id):
+
+    try:
+        print(f"Deletando perfil com ID: {profile_id}")
+        profile = get_object_or_404(Profile, id=profile_id)
+
+        if profile:
+            profile.delete()
+            return Response({'status': 'Perfil deletado com sucesso'}, status=204)
+        else:
+            return Response({'error': 'Perfil não encontrado'}, status=404)
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
+
+

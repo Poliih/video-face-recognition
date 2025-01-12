@@ -1,5 +1,6 @@
 from django.db import models
 from user_profile.associate_faces import associate_faces_to_profiles
+from django.conf import settings
 
 
 class Video(models.Model):
@@ -10,8 +11,8 @@ class Video(models.Model):
         return self.file.name
 
 class Face(models.Model):
-    video = models.ForeignKey(Video, related_name='faces', on_delete=models.CASCADE)
-    image = models.ImageField(upload_to='faces/')
+    video = models.ForeignKey(Video, related_name='face', on_delete=models.CASCADE)
+    image = models.ImageField(upload_to='face/')
     coordinates = models.CharField(max_length=100)
     detected_at = models.DateTimeField(auto_now_add=True)
     profile = models.ForeignKey('user_profile.Profile', related_name='video_faces', null=True, blank=True, on_delete=models.SET_NULL)
@@ -23,3 +24,4 @@ class Face(models.Model):
         from django.apps import apps
         Profile = apps.get_model('user_profile', 'Profile')  
         return Profile.objects.all()
+
