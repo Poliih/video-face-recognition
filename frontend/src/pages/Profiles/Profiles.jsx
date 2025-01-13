@@ -172,45 +172,46 @@ const Profiles = () => {
 
 
 
-      <div className={styles['profiles-gallery']}>
-        {profiles.map((profile) => (
-          <div key={profile.id} className={styles['profile-card']}>
-            <div className={styles['options-container']}>
-              <button
-                className={styles['option-button']}
-                onClick={() => handleEdit(profile.id)}
-              >
-                <FaEdit />
-              </button>
-              <button
-                className={styles['option-button']}
-                onClick={() => handleDelete(profile.id)}
-              >
-                <FaTrash />
-              </button>
-            </div>
-            <h3>{profile.name}</h3>
-            <div className={styles['profile-faces']}>
-              {profile.faces.map((face, index) => (
-                <div
-                  key={index}
-                  className={styles['face-item']}
+        <div className={styles['profiles-gallery']}>
+          {profiles.map((profile) => (
+            <div key={profile.id} className={styles['profile-card']}>
+              <div className={styles['options-container']}>
+                <button
+                  className={styles['option-button']}
+                  onClick={() => handleEdit(profile.id)}
                 >
-                  {face ? (
-                    <img
-                      src={face}
-                      alt={`Perfil ${profile.name} - Face ${index + 1}`}
-                      className={styles['face-image']}
-                    />
-                  ) : (
-                    <div className={styles['face-placeholder']}>Sem imagem</div>
-                  )}
-                </div>
-              ))}
+                  <FaEdit />
+                </button>
+                <button
+                  className={styles['option-button']}
+                  onClick={() => handleDelete(profile.id)}
+                >
+                  <FaTrash />
+                </button>
+              </div>
+              <h3>{profile.name}</h3>
+              <div className={styles['profile-faces']}>
+                {profile.faces.map((face, index) => (
+                  <div
+                    key={index}
+                    className={styles['face-item']}
+                  >
+                    {face.image ? (
+                      <img
+                        src={`http://127.0.0.1:8000${face.image}`}  
+                        alt={`Perfil ${profile.name} - Face ${index + 1}`}
+                        className={styles['face-image']}
+                      />
+                    ) : (
+                      <div className={styles['face-placeholder']}>Sem imagem</div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+
 
       {showMessage && (
         <div className={`${styles.message} ${styles[messageType]}`}>

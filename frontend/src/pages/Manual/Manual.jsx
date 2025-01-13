@@ -111,35 +111,55 @@ const Manual = () => {
 
   const handleDrop = (event, profileId) => {
     event.preventDefault();
-    const faceIds = selectedFaces;  
-
-
-    const facesToAssign = unassignedFaces.filter(f => faceIds.includes(f.id));
     
-    if (!facesToAssign.length) {
+    const faceIds = selectedFaces;
+    if (faceIds.length === 0) {
+      console.log('Nenhuma face selecionada para associar');
+      return;
+    }
+  
+    const facesToAssign = unassignedFaces.filter(face => faceIds.includes(face.id));
+    
+    if (facesToAssign.length === 0) {
       console.error('Nenhuma face encontrada.');
       return;
     }
+  
+    const data = {
+      profile_id: profileId,
+      face_ids: faceIds
+    };
+  
+    axios
+      .post("http://localhost:8000/api/user_profile/associate_faces_to_profile/", data)
+      .then((response) => {
+        console.log("Faces associadas com sucesso:", response.data);
+  
+        // Atualizar o perfil
+        const updatedProfiles = profiles.map(profile => {
+          if (profile.id === profileId) {
+            setSelectedProfileId(profileId);
+            return {
+              ...profile,
+              faces: [...profile.faces, ...facesToAssign] 
+            };
+          }
+          return profile;
+        });
+  
 
-
-    const updatedProfiles = profiles.map(profile => {
-      if (profile.id === profileId) {
-        setSelectedProfileId(profileId);
-        return {
-          ...profile,
-          faces: [...profile.faces, ...facesToAssign] 
-        };
-      }
-      return profile;
-    });
-
-    setProfiles(updatedProfiles);
-
-    const updatedUnassignedFaces = unassignedFaces.filter(f => !faceIds.includes(f.id));
-    setUnassignedFaces(updatedUnassignedFaces);
-
-    console.log(`Faces associadas ao perfil ${profileId}`);
+        const updatedUnassignedFaces = unassignedFaces.filter(f => !faceIds.includes(f.id));
+        setUnassignedFaces(updatedUnassignedFaces);
+      })
+      .catch((error) => {
+        console.error("Erro ao associar faces:", error);
+        alert('Erro ao associar faces.');
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
+  
 
   const handleDragOver = (event) => {
     event.preventDefault();
