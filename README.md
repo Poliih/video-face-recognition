@@ -122,4 +122,4 @@ Este projeto consiste em uma aplicação Django para processamento de vídeos, d
 ## Por:
 
 Poliana Rodrigues da Silva
-```
+
