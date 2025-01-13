@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import Menu from "./components/Menu/Menu";
 import Upload_pag from "./pages/Upload_pag/Upload_pag";
 import Manual from "./pages/Manual/Manual";
-import Automatic from "./pages/Automatic/Automatic";
 import Profiles from "./pages/Profiles/Profiles";
 
 
@@ -15,7 +14,6 @@ const App = () => {
         <Route path="/" element={<Navigate to="/upload_pag" />} />
         <Route path="/upload_pag" element={<Upload_pag />} />
         <Route path="/agrupamento/manual" element={<Manual />} />
-        <Route path="/agrupamento/automatico" element={<Automatic />} />
         <Route path="/profiles" element={<Profiles />} />
       </Routes>
     </Router>

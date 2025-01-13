@@ -12,7 +12,6 @@ const Menu = () => {
     const pathToItem = {
       "/upload_pag": "upload_pag",
       "/agrupamento/manual": "manual",
-      "/agrupamento/automatico": "automatic",
       "/profiles": "profiles",
     };
     setSelected(pathToItem[location.pathname] || "upload_pag");
@@ -58,12 +57,6 @@ const Menu = () => {
                   onClick={() => handleSelect("manual", "/agrupamento/manual")}
                 >
                   Manual
-                </li>
-                <li
-                  className={`submenu-item ${selected === "automatic" ? "selected" : ""}`}
-                  onClick={() => handleSelect("automatic", "/agrupamento/automatico")}
-                >
-                  Automático
                 </li>
               </ul>
             )}

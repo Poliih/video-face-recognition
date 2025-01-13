@@ -58,9 +58,7 @@ const Upload_pag = () => {
       if (data.faces && data.faces.length > 0) {
         setFacesDetected(true); 
         alert("Faces detectadas com sucesso!");
-      } else {
-        alert("Nenhuma face detectada no vídeo.");
-      }
+      } 
     } catch (error) {
       console.error("Erro ao buscar faces:", error);
       alert("Erro ao detectar faces.");
