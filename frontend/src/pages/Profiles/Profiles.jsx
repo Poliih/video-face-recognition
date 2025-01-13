@@ -192,13 +192,10 @@ const Profiles = () => {
               <h3>{profile.name}</h3>
               <div className={styles['profile-faces']}>
                 {profile.faces.map((face, index) => (
-                  <div
-                    key={index}
-                    className={styles['face-item']}
-                  >
-                    {face.image ? (
+                  <div key={index} className={styles['face-item']}>
+                    {face && face.image ? (
                       <img
-                        src={`http://127.0.0.1:8000${face.image}`}  
+                        src={`http://127.0.0.1:8000${face.image}`}
                         alt={`Perfil ${profile.name} - Face ${index + 1}`}
                         className={styles['face-image']}
                       />
@@ -208,6 +205,7 @@ const Profiles = () => {
                   </div>
                 ))}
               </div>
+
             </div>
           ))}
         </div>
