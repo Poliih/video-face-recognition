@@ -12,7 +12,7 @@ class FaceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Face
         fields = ['id', 'image', 'coordinates', 'detected_at', 'video', 'profile']
-
+    
 class FaceProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = FaceProfile
@@ -41,3 +41,9 @@ class FaceSerializer2(serializers.ModelSerializer):
     def get_image_url(self, obj):
         request = self.context.get('request')
         return request.build_absolute_uri(obj.image.url) if request else obj.image.url
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        profiles = instance.face_profiles.all().values('profile__id', 'profile__name')  
+        representation['profiles'] = profiles
+        return representation

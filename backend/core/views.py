@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from django.conf import settings
 from django.http import JsonResponse
 import os
+from video.models import Face
 
 def home(request):
     return HttpResponse("Página inicial") 
@@ -23,3 +24,22 @@ def list_media_files(request):
         return JsonResponse({"error": "Pasta 'face' não encontrada."}, status=404)
 
     return JsonResponse({"files": file_list})
+
+def list_faces(request):
+    """
+    Lista todas as faces detectadas em vídeos, com seus IDs e URLs.
+    """
+    faces = Face.objects.all()
+    data = [
+        {
+            "id": face.id,
+            "image": face.image.url.replace("/media/home/polianar/Documentos/GitHub/ComputerVision/backend", ""),
+            "coordinates": face.coordinates,
+            "detected_at": face.detected_at,
+            "video": face.video.id,
+            "profile_id": face.profile.id if face.profile else None,
+        }
+        for face in faces
+    ]
+    return JsonResponse({"faces": data})
+

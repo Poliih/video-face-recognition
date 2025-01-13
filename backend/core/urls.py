@@ -18,6 +18,7 @@ urlpatterns = [
     path('api/user_profile/', include('user_profile.urls')),
     re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
     path('api/media-files/', views.list_media_files, name='list-media-files'),
+    path('api/faces/', views.list_faces, name='list_faces'),
 ]
 
 if settings.DEBUG:

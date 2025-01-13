@@ -7,6 +7,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from user_profile.tasks import process_video
 from video.models import Video
+import logging
 from user_profile.utils import calculate_similarity
 from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from django.shortcuts import get_object_or_404
@@ -14,6 +15,8 @@ from rest_framework.permissions import IsAuthenticated,AllowAny
 from rest_framework.permissions import AllowAny
 import logging
 from rest_framework.decorators import api_view, permission_classes
+import requests
+
 
 
 class ProfileViewSet(viewsets.ModelViewSet):
@@ -40,6 +43,7 @@ def process_video_view(request, video_id):
         return JsonResponse({'error': str(e)}, status=500)
     
 logger = logging.getLogger(__name__)
+
 @csrf_exempt
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -58,6 +62,7 @@ def associate_faces_to_profile(request):
         try:
             profile = Profile.objects.get(id=profile_id)
         except Profile.DoesNotExist:
+            logger.error("Erro: Perfil com id %s não encontrado.", profile_id)
             return Response({"error": "Perfil não encontrado."}, status=404)
 
         faces = Face.objects.filter(id__in=face_ids)
@@ -70,6 +75,7 @@ def associate_faces_to_profile(request):
 
         for face in faces:
             FaceProfile.objects.update_or_create(profile=profile, face=face)
+            logger.info("Face %s associada ao perfil %s.", face.id, profile_id)
 
         return Response({"message": "Faces associadas com sucesso ao perfil!"})
 
@@ -100,26 +106,50 @@ def create_profile(request):
             profile = serializer.save()
             return Response({'status': 'Perfil criado com sucesso', 'profile_id': profile.id})
         return Response(serializer.errors, status=400)
+    
 
 @csrf_exempt
 @api_view(['GET'])
-@permission_classes([AllowAny]) 
+@permission_classes([AllowAny])
 def list_profiles_with_faces(request):
-
     try:
+
         profiles = Profile.objects.prefetch_related('profile_faces__face').all()
+
+        if not profiles:
+            logger.error("Nenhum perfil encontrado.")
+            return Response({"error": "Nenhum perfil encontrado."}, status=404)
+
+        response = requests.get('http://127.0.0.1:8000/api/media-files/')
+        if response.status_code != 200:
+            return Response({"error": "Erro ao buscar arquivos de mídia."}, status=500)
+        
+        media_files = response.json().get('files', [])
 
         data = [
             {
                 "id": profile.id,
                 "name": profile.name,
-                "faces": FaceSerializer(profile.profile_faces.all(), many=True).data
+                "faces": [
+                    {
+                        "id": face.face.id,
+                        "image": next((media_file for media_file in media_files if str(face.face.id) in media_file), ""),  
+                        "coordinates": face.face.coordinates,
+                        "profiles": [{"id": face_profile.profile.id, "name": face_profile.profile.name} for face_profile in face.face.face_profiles.all()]
+                    }
+                    for face in profile.profile_faces.all()
+                ]
             }
             for profile in profiles
         ]
+
         return Response(data)
+    
     except Exception as e:
-        return Response({"error": str(e)}, status=500)
+        logger.error(f"Erro ao buscar perfis: {str(e)}")
+        return Response({"error": f"Erro ao buscar perfis: {str(e)}"}, status=500)
+
+
 
 
 @csrf_exempt

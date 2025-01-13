@@ -139,3 +139,21 @@ class FaceImageView(APIView):
         serializer = FaceSerializer2(faces, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class FaceListView(APIView):
+    permission_classes = [AllowAny]   
+
+    def get(self, request, *args, **kwargs):
+        faces = Face.objects.all()
+        
+        serializer = FaceSerializer(faces, many=True)
+        
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+@csrf_exempt
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def face_list_view(request):
+    faces = Face.objects.all()
+    serializer = FaceSerializer(faces, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
