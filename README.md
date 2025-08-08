@@ -25,8 +25,8 @@ Este projeto consiste em uma aplicação Django para processamento de vídeos, d
 
 1. Clone este repositório:
    ```bash
-   git clone https://github.com/Poliih/ComputerVision.git
-   cd ComputerVision
+   git clone https://github.com/Poliih/video-face-recognition.git
+   cd video-face-recognition
    ```
 
 2. Instale as dependências:
